@@ -1,0 +1,202 @@
+#	Name: 		Joshua Paytosh
+#	Program:	P_3
+#	Purpose:	To practice with arrays, and to process integers
+
+.data
+	myArray: 	.space 44 	# Reserves space for atleast 11 integers
+	str1: 		.asciiz 	"Please input up to 10 integers, end your input with '-9'\n"
+	str2:           .asciiz		"\nThe Sum of the integers is: "
+	str3:		.asciiz		"\nThe Average of the integers is: "
+	str4:		.asciiz		"\nThe Maximum of the integers is:  "
+	str5:		.asciiz		"\nThe Minimum of the integers is:  "
+	str6:		.asciiz		"\nThe Number of evens is: "
+	str7:		.asciiz		"\nThe Number of odds is: "
+.text
+
+#Output text to request user input
+	li $v0, 4
+	la $a0, str1
+	syscall
+
+#User input
+	li $v0, 5
+	syscall
+	
+	move $s0, $v0
+	
+	la $t3, myArray
+					
+	sw $s0, 0($t3)
+
+
+Loop: 
+	beq $s0, -9, inputEnd	# Checks if input is -9
+	addi $t1, $t1, 1	# Counter for the loop
+	bgt $t1, 9, inputEnd	# Adds a -9 to the end of input
+	
+	
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	beq $s0, -9, inputEnd	# Checks if input is -9
+	
+	
+	addi $t3, $t3, 4
+	sw $s0, 0($t3)	
+
+	b Loop
+	
+inputEnd:
+	move $s1, $t1		#Store the size of the array
+	la $t3, myArray		# Reset index of the array
+Loop2:
+	beqz $t1, Loop2End		# Branch if t1 is equal to 0
+
+	lw $t4, 0($t3)		# Load t4 with first number
+	
+	lw $t5, 4($t3)		# Load t5 with second number
+	add $t6, $t4, $t5	# add the two
+	add $t7, $t7, $t6	# Add the result of the previous sum to t7
+	addi $t3, $t3, 8	# Increment the offset
+	subi $t1, $t1, 1	# Subtract the loop counter
+	b Loop2			# Loop
+
+Loop2End:
+	la $t0, myArray		#Initialize counters and array again
+	li $t1, 0
+	lw $t2, 0($t0)
+#Finding max
+maxLoop:
+	bge $t1, $s1, maxEnd		
+	addi $t1, $t1, 1		
+	lw $t3, 0($t0)		#Grab item
+	addi $t0, $t0, 4	#Add 4 to array
+	bge $t2, $t3, False	# If t2 is >= t3, then skip to false
+	
+	
+	move $t2, $t3		#If not, t3 is the new max, store in t2
+	
+False:
+	b maxLoop
+	
+	
+maxEnd:
+	move $s4, $t2		# Store the min
+	
+	
+	
+	#Finding min
+	la $t0, myArray		#Initialize counters and array
+	li $t1, 0
+	lw $t2, 0($t0)
+minLoop:
+	bge $t1, $s1, minEnd	
+	addi $t1, $t1, 1	
+	lw $t3, 0($t0)		#Grab item
+	addi $t0, $t0, 4	#Increment array
+	ble $t2, $t3, False2	# If t2 is <= t3, then skip to false
+	
+	
+	move $t2, $t3		# Else t3 is the new min, store in t2
+	
+False2:
+	b minLoop
+	
+minEnd:
+	move $s5, $t2		# Store the min
+	la $t0, myArray		#Initialize counters and array
+	li $t1, 0
+	li $t2, 2
+oddLoop:
+	bge $t1, $s1, oddEnd	
+	addi $t1, $t1, 1	
+	lw $t3, 0($t0)		#Grab item
+	addi $t0, $t0, 4
+	div $t3, $t2		#Divide by size
+	mfhi $t3		
+	beqz $t3, False3	#If remainder == 0, then it is false
+	addi $t4, $t4, 1	#Else increment odd counter
+	
+	
+	False3:
+	b oddLoop
+	
+oddEnd:
+	move $s7, $t4			#Initializes all counters, and initializes array, and 2 to divide the integers by
+	la $t0, myArray
+	li $t1, 0
+	li $t2, 2
+	li $t4, 0
+evenLoop:
+	bge $t1, $s1, End
+	addi $t1, $t1, 1
+	lw $t3, 0($t0)			#Grab item from array
+	addi $t0, $t0, 4		#Increment the array
+	div $t3, $t2			#Divide the integer grabbed by two
+	mfhi $t3			#Check remainder
+	bnez $t3, False4		#If not even, skip to false
+	addi $t4, $t4, 1		#If even, increment counter
+	
+	
+	False4:
+	b evenLoop
+	
+	
+	
+End:
+	move $s6, $t4		# Store the evens
+	move $s2, $t7 		# Store the sum
+	div $s2, $s1
+	mflo $s3		# Average
+	
+	
+	li $v0, 4
+	la $a0, str2
+	syscall
+	
+	li $v0, 1
+	move $a0, $s2
+	syscall			# Output Sum
+	
+	li $v0, 4
+	la $a0, str3
+	syscall
+	
+	li $v0, 1
+	move $a0, $s3
+	syscall			# Output Average
+	
+	li $v0, 4
+	la $a0, str4
+	syscall
+	
+	li $v0, 1
+	move $a0, $s4
+	syscall			# Output Max
+	
+	li $v0, 4
+	la $a0, str5
+	syscall
+	
+	li $v0, 1
+	move $a0, $s5
+	syscall			# Output Min
+	
+	li $v0, 4
+	la $a0, str6
+	syscall
+	
+	li $v0, 1
+	move $a0, $s6
+	syscall			# Output Evens
+	
+	li $v0, 4
+	la $a0, str7
+	syscall
+	
+	li $v0, 1
+	move $a0, $s7
+	syscall			# Output Odds
+	
+	li $v0, 10
+	syscall			# Exit
